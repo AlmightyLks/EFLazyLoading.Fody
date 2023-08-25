@@ -13,19 +13,15 @@ namespace SpatialFocus.EFLazyLoading.Tests.Assembly
 		private readonly Action<object, string>? lazyLoader;
 #pragma warning restore 169
 
-		private readonly List<Order> orders = new();
-
 		public CustomerWithLazyLoaderField(string name)
 		{
 			Name = name;
 		}
 
-		public virtual IReadOnlyCollection<Order> Orders => this.orders.AsReadOnly();
+		public virtual ICollection<Order> Orders { get; set; } = null!;
 
 		public int Id { get; protected set; }
 
 		public string Name { get; protected set; }
-
-		public void AddOrder(Order order) => this.orders.Add(order);
 	}
 }

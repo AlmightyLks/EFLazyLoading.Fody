@@ -10,7 +10,6 @@ namespace SpatialFocus.EFLazyLoading.Tests.Assembly
 	public class CustomerWithInjectedLazyLoader
 	{
 		private readonly Action<object, string>? lazyLoader;
-		private readonly List<Order> orders = new();
 
 		public CustomerWithInjectedLazyLoader(string name, Action<object, string> lazyLoader)
 		{
@@ -18,14 +17,12 @@ namespace SpatialFocus.EFLazyLoading.Tests.Assembly
 			this.lazyLoader = lazyLoader;
 		}
 
-		public int NumberOfOrders => this.orders.Count;
+		public int NumberOfOrders => this.Orders?.Count ?? 0;
 
-		public virtual IReadOnlyCollection<Order> Orders => this.orders.AsReadOnly();
+		public virtual ICollection<Order> Orders { get; set; } = null!;
 
 		public int Id { get; protected set; }
 
 		public string Name { get; protected set; }
-
-		public void AddOrder(Order order) => this.orders.Add(order);
 	}
 }

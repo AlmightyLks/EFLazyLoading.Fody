@@ -6,7 +6,6 @@ namespace SpatialFocus.EFLazyLoading.Fody
 {
 	using System;
 	using System.Collections.Generic;
-	using System.Collections.ObjectModel;
 	using System.Linq;
 	using System.Runtime.CompilerServices;
 	using Mono.Cecil;
@@ -27,9 +26,7 @@ namespace SpatialFocus.EFLazyLoading.Fody
 
 		public TypeReference LazyLoaderType { get; set; } = null!;
 
-		public TypeReference ReadOnlyCollectionInterface { get; set; } = null!;
-
-		public TypeReference ReadOnlyCollectionType { get; set; } = null!;
+		public TypeReference CollectionInterface { get; set; } = null!;
 
 		protected ModuleWeaver ModuleWeaver { get; }
 
@@ -53,11 +50,8 @@ namespace SpatialFocus.EFLazyLoading.Fody
 			references.LazyLoaderInvokeMethod = moduleWeaver.ModuleDefinition.ImportReference(lazyLoaderInvokeMethod)
 				.MakeHostInstanceGeneric(moduleWeaver.TypeSystem.ObjectReference, moduleWeaver.TypeSystem.StringReference);
 
-			TypeDefinition readOnlyCollectionType = moduleWeaver.FindTypeDefinition(typeof(ReadOnlyCollection<>).Name);
-			references.ReadOnlyCollectionType = moduleWeaver.ModuleDefinition.ImportReference(readOnlyCollectionType);
-
-			TypeDefinition readOnlyCollectionInterface = moduleWeaver.FindTypeDefinition(typeof(IReadOnlyCollection<>).Name);
-			references.ReadOnlyCollectionInterface = moduleWeaver.ModuleDefinition.ImportReference(readOnlyCollectionInterface);
+			TypeDefinition collectionInterface = moduleWeaver.FindTypeDefinition(typeof(ICollection<>).Name);
+			references.CollectionInterface = moduleWeaver.ModuleDefinition.ImportReference(collectionInterface);
 
 			return references;
 		}

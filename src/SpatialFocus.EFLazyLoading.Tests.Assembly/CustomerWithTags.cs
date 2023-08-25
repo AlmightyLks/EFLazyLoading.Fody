@@ -9,19 +9,15 @@ namespace SpatialFocus.EFLazyLoading.Tests.Assembly
 	// Lazy loader should only be injected for entities (classes), not for enums
 	public class CustomerWithTags
 	{
-		private readonly List<Tag> tags = new();
-
 		public CustomerWithTags(string name)
 		{
 			Name = name;
 		}
 
-		public virtual IReadOnlyCollection<Tag> Tags => this.tags.AsReadOnly();
+		public virtual ICollection<Tag> Tags { get; set; } = null!;
 
 		public int Id { get; protected set; }
 
 		public string Name { get; protected set; }
-
-		public void AddTag(Tag tag) => this.tags.Add(tag);
 	}
 }

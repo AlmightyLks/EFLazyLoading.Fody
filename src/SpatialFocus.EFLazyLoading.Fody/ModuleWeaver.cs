@@ -22,8 +22,7 @@ namespace SpatialFocus.EFLazyLoading.Fody
 
 			foreach (ClassWeavingContext classWeavingContext in this.GetWeavingCandidates(references, new Namespaces(this)))
 			{
-				ICollection<NavigationPropertyWeavingContext> navigationPropertyWeavingContexts =
-					classWeavingContext.GetNavigationPropertyCandidates();
+				ICollection<NavigationPropertyWeavingContext> navigationPropertyWeavingContexts = classWeavingContext.GetNavigationPropertyCandidates();
 
 				if (!navigationPropertyWeavingContexts.Any())
 				{
@@ -38,7 +37,9 @@ namespace SpatialFocus.EFLazyLoading.Fody
 
 				foreach (NavigationPropertyWeavingContext navigationPropertyWeavingContext in navigationPropertyWeavingContexts)
 				{
-					navigationPropertyWeavingContext.AddLazyLoadingToReferencingMethods();
+					navigationPropertyWeavingContext.AddLazyLoadingToGetter();
+
+					// navigationPropertyWeavingContext.AddLazyLoadingToReferencingMethods();
 				}
 			}
 		}
@@ -53,11 +54,9 @@ namespace SpatialFocus.EFLazyLoading.Fody
 		protected TypeDefinition CreateExtensionClass(References references)
 		{
 			var extension = new TypeDefinition("SpatialFocus.EFLazyLoading", "LazyLoadingExtensions",
-				TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Abstract | TypeAttributes.AutoClass |
-				TypeAttributes.AnsiClass | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit, TypeSystem.ObjectReference);
+				TypeAttributes.Class | TypeAttributes.Public | TypeAttributes.Abstract | TypeAttributes.AutoClass | TypeAttributes.AnsiClass | TypeAttributes.Sealed | TypeAttributes.BeforeFieldInit, TypeSystem.ObjectReference);
 
-			MethodDefinition loadMethodDefinition = new MethodDefinition("Load",
-				MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static, TypeSystem.VoidReference);
+			MethodDefinition loadMethodDefinition = new MethodDefinition("Load", MethodAttributes.Public | MethodAttributes.HideBySig | MethodAttributes.Static, TypeSystem.VoidReference);
 
 			GenericParameter genericParameter = new GenericParameter(loadMethodDefinition) { Name = "TEntity" };
 			loadMethodDefinition.ReturnType = genericParameter;

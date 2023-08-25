@@ -8,26 +8,18 @@ namespace SpatialFocus.EFLazyLoading.Tests.Assembly
 
 	public class Customer
 	{
-		private readonly List<Order> orders = new();
-
 		public Customer(string name)
 		{
 			Name = name;
 		}
 
-		public int NumberOfOrders => this.orders.Count;
+		public int NumberOfOrders => Orders.Count;
 
-		public virtual IReadOnlyCollection<Order> Orders => this.orders.AsReadOnly();
+		public virtual ICollection<Order> Orders { get; set; } = null!;
 
 		public int Id { get; protected set; }
 
 		public string Name { get; protected set; }
-
-		public void AddOrder(Order order) => this.orders.Add(order);
-
-		public void ClearOrders() => this.orders.Clear();
-
-		public void RemoveOrder(Order order) => this.orders.Remove(order);
 
 		public class Nested
 		{
@@ -38,7 +30,7 @@ namespace SpatialFocus.EFLazyLoading.Tests.Assembly
 				this.customer = customer;
 			}
 
-			public virtual IReadOnlyCollection<Order> Orders => this.customer.orders.AsReadOnly();
+			public virtual ICollection<Order> Orders => this.customer.Orders;
 		}
 	}
 }

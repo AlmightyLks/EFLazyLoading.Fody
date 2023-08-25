@@ -8,26 +8,19 @@ namespace SpatialFocus.EFLazyLoading.Tests.Assembly
 
 	public class CustomerWithTagsAndOrders
 	{
-		private readonly List<Order> orders = new();
-		private readonly List<Tag> tags = new();
-
 		public CustomerWithTagsAndOrders(string name)
 		{
 			Name = name;
 		}
 
-		public int NumberOfOrders => this.orders.Count;
+		public int NumberOfOrders => Orders.Count;
 
-		public virtual IReadOnlyCollection<Order> Orders => this.orders.AsReadOnly();
+		public virtual ICollection<Order> Orders { get; set; } = null!;
 
-		public virtual IReadOnlyCollection<Tag> Tags => this.tags.AsReadOnly();
+		public virtual ICollection<Tag> Tags { get; set; } = null!;
 
 		public int Id { get; protected set; }
 
 		public string Name { get; protected set; }
-
-		public void AddOrder(Order order) => this.orders.Add(order);
-
-		public void AddTag(Tag tag) => this.tags.Add(tag);
 	}
 }

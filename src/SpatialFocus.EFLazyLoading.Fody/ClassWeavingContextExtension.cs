@@ -13,48 +13,44 @@ namespace SpatialFocus.EFLazyLoading.Fody
 	{
 		public static ICollection<NavigationPropertyWeavingContext> GetNavigationPropertyCandidates(this ClassWeavingContext context)
 		{
-			return context.TypeDefinition.Properties.Select(propertyDefinition =>
-				{
-					if (propertyDefinition.SetMethod != null)
-					{
-						return null;
-					}
-
-					bool isReadOnlyCollectionType = propertyDefinition.PropertyType.GetElementType().Resolve() ==
-						context.References.ReadOnlyCollectionType.Resolve();
-					bool isReadOnlyCollectionInterface = propertyDefinition.PropertyType.GetElementType().Resolve() ==
-						context.References.ReadOnlyCollectionInterface.Resolve();
-
-					if (!isReadOnlyCollectionType && !isReadOnlyCollectionInterface)
-					{
-						return null;
-					}
-
-					GenericInstanceType instance = (GenericInstanceType)propertyDefinition.PropertyType;
-					TypeDefinition? genericArgument = instance.GenericArguments.FirstOrDefault()?.Resolve();
-
-					if (genericArgument == null || !genericArgument.IsClass || genericArgument.IsString() || genericArgument.IsEnum ||
-						genericArgument.IsValueType || genericArgument.IsPrimitive)
-					{
-						return null;
-					}
-
-					string propertyName = propertyDefinition.Name;
-
-					FieldDefinition? fieldDefinition = context.TypeDefinition.Fields.SingleOrDefault(fieldDefinition =>
-						string.Equals(fieldDefinition.Name, propertyName, StringComparison.OrdinalIgnoreCase) ||
-						string.Equals(fieldDefinition.Name, $"_{propertyName}", StringComparison.OrdinalIgnoreCase) ||
-						string.Equals(fieldDefinition.Name, $"m_{propertyName}", StringComparison.OrdinalIgnoreCase));
-
-					if (fieldDefinition == null)
-					{
-						return null;
-					}
-
-					return new NavigationPropertyWeavingContext(context, propertyDefinition, fieldDefinition);
-				})
+			return context.TypeDefinition.Properties.Select(Transform)
 				.Where(x => x != null)
 				.ToList()!;
+
+			NavigationPropertyWeavingContext? Transform(PropertyDefinition propertyDefinition)
+			{
+				bool isReadOnlyCollectionInterface = propertyDefinition.PropertyType.GetElementType().Resolve() == context.References.CollectionInterface.Resolve();
+
+				if (!isReadOnlyCollectionInterface)
+				{
+					return null;
+				}
+
+				GenericInstanceType instance = (GenericInstanceType)propertyDefinition.PropertyType;
+				TypeDefinition? genericArgument = instance.GenericArguments.FirstOrDefault()?.Resolve();
+
+				if (genericArgument == null || !genericArgument.IsClass || genericArgument.IsString() || genericArgument.IsEnum || genericArgument.IsValueType || genericArgument.IsPrimitive)
+				{
+					return null;
+				}
+
+				string propertyName = propertyDefinition.Name;
+
+				FieldDefinition? fieldDefinition = context.TypeDefinition.Fields.SingleOrDefault(fieldDefinition =>
+					string.Equals(fieldDefinition.Name, GetBackingFieldName(propertyName), StringComparison.OrdinalIgnoreCase));
+
+				if (fieldDefinition == null)
+				{
+					return null;
+				}
+
+				return new NavigationPropertyWeavingContext(context, propertyDefinition, fieldDefinition);
+
+				string GetBackingFieldName(string propertyName)
+				{
+					return string.Format("<{0}>k__BackingField", propertyName);
+				}
+			}
 		}
 	}
 }

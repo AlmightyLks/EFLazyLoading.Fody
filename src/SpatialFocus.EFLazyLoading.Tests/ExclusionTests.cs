@@ -44,20 +44,6 @@ namespace SpatialFocus.EFLazyLoading.Tests
 		}
 
 		[Fact]
-		public void E03_LazyLoadingNotUsedInMethod()
-		{
-			ICollection<Tuple<object, string>> lazyLoaderCalls = new List<Tuple<object, string>>();
-
-			dynamic instance = TestHelpers.CreateInstance<CustomerWithInjectedLazyLoader>(ExclusionTests.TestResult.Assembly, "Customer1",
-				new Action<object, string>((entity, property) => lazyLoaderCalls.Add(new Tuple<object, string>(entity, property))));
-			dynamic order1 = TestHelpers.CreateInstance<Order>(ExclusionTests.TestResult.Assembly, "Order 1", 10.99M);
-
-			instance.AddOrder(order1);
-
-			Assert.Equal(0, lazyLoaderCalls.Count);
-		}
-
-		[Fact]
 		public void E04_LazyLoadingNotUsedInExpressionBodyProperty()
 		{
 			ICollection<Tuple<object, string>> lazyLoaderCalls = new List<Tuple<object, string>>();
@@ -101,7 +87,7 @@ namespace SpatialFocus.EFLazyLoading.Tests
 				new Action<object, string>((entity, property) => lazyLoaderCalls.Add(new Tuple<object, string>(entity, property))));
 			dynamic tag = TestHelpers.CreateInstance<Tag>(ExclusionTests.TestResult.Assembly);
 
-			instance.AddTag(tag);
+			_ = instance.Tags;
 
 			Assert.Equal(0, lazyLoaderCalls.Count);
 		}
@@ -111,11 +97,9 @@ namespace SpatialFocus.EFLazyLoading.Tests
 		{
 			ICollection<Tuple<object, string>> lazyLoaderCalls = new List<Tuple<object, string>>();
 
-			dynamic instance = TestHelpers.CreateInstance<CustomerWithTagsAndOrders>(ExclusionTests.TestResult.Assembly, "Customer1",
-				new Action<object, string>((entity, property) => lazyLoaderCalls.Add(new Tuple<object, string>(entity, property))));
-			dynamic order1 = TestHelpers.CreateInstance<Order>(ExclusionTests.TestResult.Assembly, "Order 1", 10.99M);
+			dynamic instance = TestHelpers.CreateInstance<CustomerWithTagsAndOrders>(ExclusionTests.TestResult.Assembly, "Customer1", new Action<object, string>((entity, property) => lazyLoaderCalls.Add(new Tuple<object, string>(entity, property))));
 
-			instance.AddOrder(order1);
+			_ = instance.Orders;
 
 			Assert.Equal(1, lazyLoaderCalls.Count);
 		}

@@ -56,14 +56,5 @@ namespace SpatialFocus.EFLazyLoading.Tests
 
 			Assert.Single(constructors);
 		}
-
-		[Fact]
-		public void C05_ConstructorsAreWeavedForReadOnlyCollection()
-		{
-			ConstructorInfo[] constructors = TestHelpers.CreateType<CustomerWithReadOnlyCollection>(ConstructorTests.TestResult.Assembly)
-				.GetConstructors(TestHelpers.ConstructorBindingFlags);
-
-			Assert.Equal(2, constructors.Length);
-		}
 	}
 }

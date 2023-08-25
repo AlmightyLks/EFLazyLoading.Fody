@@ -9,19 +9,15 @@ namespace SpatialFocus.EFLazyLoading.Tests.Assembly
 	// Lazy loader should only be injected for entities (classes), not for integers
 	public class CustomerWithIntegers
 	{
-		private readonly List<int> tags = new();
-
 		public CustomerWithIntegers(string name)
 		{
 			Name = name;
 		}
 
-		public virtual IReadOnlyCollection<int> Tags => this.tags.AsReadOnly();
+		public virtual ICollection<int> Tags { get; set; } = null!;
 
 		public int Id { get; protected set; }
 
 		public string Name { get; protected set; }
-
-		public void AddTag(int tag) => this.tags.Add(tag);
 	}
 }
