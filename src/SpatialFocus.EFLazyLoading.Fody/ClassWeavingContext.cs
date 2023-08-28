@@ -15,7 +15,6 @@ namespace SpatialFocus.EFLazyLoading.Fody
 			this.moduleWeaver = moduleWeaver;
 			TypeDefinition = typeDefinition;
 			References = references;
-			//DefaultTypeDefinition = defaultTypeDefinition.Resolve();
 			DefaultTypeDefinition = defaultTypeDefinition.Resolve();
 		}
 

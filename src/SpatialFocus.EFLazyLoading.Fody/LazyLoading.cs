@@ -4,6 +4,7 @@
 
 namespace SpatialFocus.EFLazyLoading.Fody
 {
+	using System.Collections.ObjectModel;
 	using System.Linq;
 	using Mono.Cecil;
 	using Mono.Cecil.Cil;
@@ -58,36 +59,32 @@ namespace SpatialFocus.EFLazyLoading.Fody
 			context.TypeDefinition.Fields.Add(context.LazyLoaderField);
 		}
 
-		public static void AddLazyLoadingToGetter(this NavigationPropertyWeavingContext context)
+		public static void AddLazyLoadingToGetter(this NavigationPropertyWeavingContext context, ModuleDefinition module)
 		{
+			var genericArgs = ((GenericInstanceType)context.PropertyDefinition.PropertyType).GenericArguments;
+			var genericArg = genericArgs.First();
+			var observableType = module.ImportReference(typeof(ObservableCollection<>)).MakeGenericInstanceType(genericArg);
+			var observableCtor = module.ImportReference(observableType.Resolve().Methods.First(m => m.IsConstructor && m.Parameters.Count == 0)).MakeHostInstanceGeneric(genericArg);
+
 			var processorCtx = context.PropertyDefinition.GetMethod.Body.GetILProcessor().Start();
+			var returnInstruction = processorCtx.Instruction;
 
-			processorCtx
-				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ret))
-				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldfld, context.FieldDefinition))
-				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldarg_0))
-				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Stfld, context.FieldDefinition))
-				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Newobj, context.ClassWeavingContext.References.DefaultCollectionCtor))
-				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldarg_0))
-				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Br_S, processorCtx.Instruction))
-				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Callvirt, context.ClassWeavingContext.References.LazyLoaderInvokeMethod))
-				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldstr, context.PropertyDefinition.Name))
-				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldarg_0))
-				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldfld, context.ClassWeavingContext.LazyLoaderField))
-				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldarg_0))
-				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Brfalse_S, processorCtx.Instruction))
-				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldfld, context.ClassWeavingContext.LazyLoaderField))
-				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldarg_0));
-
-			// Insert the new instructions into the method body
-			//context.PropertyDefinition.GetMethod.Body.Instructions.Insert(0, returnFieldInstruction);
-
-			// context.PropertyDefinition.GetMethod.Body.GetILProcessor().Start()
-			// .Prepend(x => x.Create(OpCodes.Callvirt, context.ClassWeavingContext.References.LazyLoaderInvokeMethod))
-			// .Prepend(x => x.Create(OpCodes.Ldstr, context.PropertyDefinition.Name))
-			// .Prepend(x => x.Create(OpCodes.Ldarg_0))
-			// .Prepend(x => x.Create(OpCodes.Ldfld, context.ClassWeavingContext.LazyLoaderField))
-			// .Prepend(x => x.Create(OpCodes.Ldarg_0));
+			processorCtx = processorCtx.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ret));
+			processorCtx = processorCtx.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldfld, context.FieldDefinition));
+			processorCtx = processorCtx.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldarg_0));
+			processorCtx = processorCtx.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Stfld, context.FieldDefinition));
+			processorCtx = processorCtx.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Newobj, observableCtor));
+			processorCtx = processorCtx.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldarg_0));
+			Instruction? newObjInstruction = processorCtx.Instruction;
+			processorCtx = processorCtx.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Br_S, returnInstruction));
+			processorCtx = processorCtx.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Callvirt, context.ClassWeavingContext.References.LazyLoaderInvokeMethod));
+			processorCtx = processorCtx.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldstr, context.PropertyDefinition.Name));
+			processorCtx = processorCtx.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldarg_0));
+			processorCtx = processorCtx.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldfld, context.ClassWeavingContext.LazyLoaderField));
+			processorCtx = processorCtx.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldarg_0));
+			processorCtx = processorCtx.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Brfalse_S, newObjInstruction));
+			processorCtx = processorCtx.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldfld, context.ClassWeavingContext.LazyLoaderField));
+			processorCtx = processorCtx.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldarg_0));
 		}
 	}
 }

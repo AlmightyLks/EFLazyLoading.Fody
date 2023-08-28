@@ -1,6 +1,8 @@
 ﻿using System;
 using System.Linq;
+using Fody;
 using Microsoft.EntityFrameworkCore;
+using SpatialFocus.EFLazyLoading.Fody;
 using SpatialFocus.EFLazyLoading.Tests.Assembly;
 using Xunit;
 
@@ -8,9 +10,17 @@ namespace SpatialFocus.EFLazyLoading.Tests
 {
 	public class EntityFrameworkCoreTests
 	{
+		private static readonly TestResult TestResult;
+
+		static EntityFrameworkCoreTests()
+		{
+			var weavingTask = new ModuleWeaver();
+			EntityFrameworkCoreTests.TestResult = weavingTask.ExecuteTestRun($"{typeof(Customer).Namespace}.dll", ignoreCodes: new[] { "0x80131869" });
+		}
+
 		public EntityFrameworkCoreTests()
 		{
-			using var ctx = new EFCTestContext();
+			using var ctx = TestHelpers.CreateInstance<EFCTestContext>(TestResult.Assembly);
 			for (int i = 0; i < 100; i++)
 			{
 				ctx.Customers.Add(new Customer(i.ToString()));

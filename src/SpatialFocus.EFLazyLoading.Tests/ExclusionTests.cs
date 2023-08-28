@@ -6,6 +6,7 @@ namespace SpatialFocus.EFLazyLoading.Tests
 {
 	using System;
 	using System.Collections.Generic;
+	using System.Collections.ObjectModel;
 	using global::Fody;
 	using SpatialFocus.EFLazyLoading.Fody;
 	using SpatialFocus.EFLazyLoading.Tests.Assembly;
@@ -18,8 +19,10 @@ namespace SpatialFocus.EFLazyLoading.Tests
 
 		static ExclusionTests()
 		{
+			var weavingTask = new ModuleWeaver();
 			ExclusionTests.TestResult =
-				new ModuleWeaver().ExecuteTestRun($"{typeof(Customer).Namespace}.dll", ignoreCodes: new[] { "0x80131869" });
+				weavingTask.ExecuteTestRun($"{typeof(Customer).Namespace}.dll", ignoreCodes: new[] { "0x80131869" });
+
 		}
 
 		[Fact]
@@ -99,9 +102,17 @@ namespace SpatialFocus.EFLazyLoading.Tests
 
 			dynamic instance = TestHelpers.CreateInstance<CustomerWithTagsAndOrders>(ExclusionTests.TestResult.Assembly, "Customer1", new Action<object, string>((entity, property) => lazyLoaderCalls.Add(new Tuple<object, string>(entity, property))));
 
-			_ = instance.Orders;
+			Assert.Equal(typeof(ObservableCollection<Order>), instance.Orders.GetType());
 
 			Assert.Equal(1, lazyLoaderCalls.Count);
+		}
+
+		[Fact]
+		public void E123_LazyLoaderStillUsedForClass()
+		{
+			dynamic instance = TestHelpers.CreateInstance<CustomerWithTagsAndOrders>(ExclusionTests.TestResult.Assembly, "Customer1");
+
+			Assert.Equal(typeof(ObservableCollection<Order>).FullName, instance.Orders.GetType().FullName);
 		}
 
 		[Fact]

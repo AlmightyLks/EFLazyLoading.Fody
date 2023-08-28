@@ -10,14 +10,12 @@ namespace SpatialFocus.EFLazyLoading.Fody
 	using global::Fody;
 	using Mono.Cecil;
 	using Mono.Cecil.Cil;
-	using Mono.Cecil.Rocks;
 
 	public partial class ModuleWeaver : BaseModuleWeaver
 	{
 		public override void Execute()
 		{
 			References references = Fody.References.Init(this);
-
 			TypeDefinition extension = CreateExtensionClass(references);
 			ModuleDefinition.Types.Add(extension);
 			references.ExtensionLoadMethod = ModuleDefinition.ImportReference(extension.Methods.Single());
@@ -26,8 +24,6 @@ namespace SpatialFocus.EFLazyLoading.Fody
 			// var types = AssemblyDefinition.ReadAssembly(location).MainModule.Types;
 			// var defaultTypeDefinition = types.First(x => x.Name == "ObservableCollection`1");
 			var defaultTypeDefinition = ModuleDefinition.ImportReference(typeof(ObservableCollection<>)).Resolve();
-
-			references.DefaultCollectionCtor = ModuleDefinition.ImportReference(defaultTypeDefinition.GetConstructors().Single(x => !x.HasParameters).Resolve());
 
 			foreach (ClassWeavingContext classWeavingContext in this.GetWeavingCandidates(references, defaultTypeDefinition, new Namespaces(this)))
 			{
@@ -46,7 +42,7 @@ namespace SpatialFocus.EFLazyLoading.Fody
 
 				foreach (NavigationPropertyWeavingContext navigationPropertyWeavingContext in navigationPropertyWeavingContexts)
 				{
-					navigationPropertyWeavingContext.AddLazyLoadingToGetter();
+					navigationPropertyWeavingContext.AddLazyLoadingToGetter(ModuleDefinition);
 
 					// navigationPropertyWeavingContext.AddLazyLoadingToReferencingMethods();
 				}
