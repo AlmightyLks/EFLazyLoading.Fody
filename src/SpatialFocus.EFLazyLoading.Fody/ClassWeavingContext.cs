@@ -10,16 +10,20 @@ namespace SpatialFocus.EFLazyLoading.Fody
 	{
 		private readonly ModuleWeaver moduleWeaver;
 
-		public ClassWeavingContext(ModuleWeaver moduleWeaver, TypeDefinition typeDefinition, References references)
+		public ClassWeavingContext(ModuleWeaver moduleWeaver, TypeDefinition typeDefinition, References references, TypeDefinition defaultTypeDefinition)
 		{
 			this.moduleWeaver = moduleWeaver;
 			TypeDefinition = typeDefinition;
 			References = references;
+			//DefaultTypeDefinition = defaultTypeDefinition.Resolve();
+			DefaultTypeDefinition = defaultTypeDefinition.Resolve();
 		}
 
 		public References References { get; }
 
 		public TypeDefinition TypeDefinition { get; }
+
+		public TypeDefinition DefaultTypeDefinition { get; }
 
 		public FieldDefinition? LazyLoaderField { get; set; }
 

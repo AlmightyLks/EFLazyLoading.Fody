@@ -12,8 +12,7 @@ namespace SpatialFocus.EFLazyLoading.Fody
 
 	public static class ModuleWeaverExtension
 	{
-		public static ICollection<ClassWeavingContext> GetWeavingCandidates(this ModuleWeaver moduleWeaver, References references,
-			Namespaces namespaces)
+		public static ICollection<ClassWeavingContext> GetWeavingCandidates(this ModuleWeaver moduleWeaver, References references, TypeDefinition defaultTypeDefinition, Namespaces namespaces)
 		{
 			if (moduleWeaver == null)
 			{
@@ -50,7 +49,7 @@ namespace SpatialFocus.EFLazyLoading.Fody
 
 					return true;
 				})
-				.Select(typeDefinition => new ClassWeavingContext(moduleWeaver, typeDefinition, references))
+				.Select(typeDefinition => new ClassWeavingContext(moduleWeaver, typeDefinition, references, defaultTypeDefinition))
 				.ToList();
 		}
 	}

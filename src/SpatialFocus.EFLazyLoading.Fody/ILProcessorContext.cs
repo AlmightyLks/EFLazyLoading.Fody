@@ -13,10 +13,10 @@ namespace SpatialFocus.EFLazyLoading.Fody
 		public ILProcessorContext(ILProcessor processor, Instruction? currentInstruction)
 		{
 			Processor = processor;
-			CurrentInstruction = currentInstruction;
+			Instruction = currentInstruction;
 		}
 
-		public Instruction? CurrentInstruction { get; set; }
+		public Instruction? Instruction { get; set; }
 
 		public ILProcessor Processor { get; }
 
@@ -29,7 +29,7 @@ namespace SpatialFocus.EFLazyLoading.Fody
 
 			Instruction instruction = action(Processor);
 
-			if (CurrentInstruction == null)
+			if (Instruction == null)
 			{
 				if (Processor.Body.Instructions.Count == 0)
 				{
@@ -42,7 +42,7 @@ namespace SpatialFocus.EFLazyLoading.Fody
 			}
 			else
 			{
-				Processor.InsertAfter(CurrentInstruction, instruction);
+				Processor.InsertAfter(Instruction, instruction);
 			}
 
 			return new ILProcessorContext(Processor, instruction);
@@ -57,7 +57,7 @@ namespace SpatialFocus.EFLazyLoading.Fody
 
 			Instruction instruction = action(Processor);
 
-			if (CurrentInstruction == null)
+			if (Instruction == null)
 			{
 				if (Processor.Body.Instructions.Count == 0)
 				{
@@ -70,7 +70,7 @@ namespace SpatialFocus.EFLazyLoading.Fody
 			}
 			else
 			{
-				Processor.InsertBefore(CurrentInstruction, instruction);
+				Processor.InsertBefore(Instruction, instruction);
 			}
 
 			return new ILProcessorContext(Processor, instruction);

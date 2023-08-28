@@ -5,10 +5,12 @@
 namespace SpatialFocus.EFLazyLoading.Fody
 {
 	using System.Collections.Generic;
+	using System.Collections.ObjectModel;
 	using System.Linq;
 	using global::Fody;
 	using Mono.Cecil;
 	using Mono.Cecil.Cil;
+	using Mono.Cecil.Rocks;
 
 	public partial class ModuleWeaver : BaseModuleWeaver
 	{
@@ -20,7 +22,14 @@ namespace SpatialFocus.EFLazyLoading.Fody
 			ModuleDefinition.Types.Add(extension);
 			references.ExtensionLoadMethod = ModuleDefinition.ImportReference(extension.Methods.Single());
 
-			foreach (ClassWeavingContext classWeavingContext in this.GetWeavingCandidates(references, new Namespaces(this)))
+			// var location = typeof(ObservableCollection<>).Assembly.Location;
+			// var types = AssemblyDefinition.ReadAssembly(location).MainModule.Types;
+			// var defaultTypeDefinition = types.First(x => x.Name == "ObservableCollection`1");
+			var defaultTypeDefinition = ModuleDefinition.ImportReference(typeof(ObservableCollection<>)).Resolve();
+
+			references.DefaultCollectionCtor = ModuleDefinition.ImportReference(defaultTypeDefinition.GetConstructors().Single(x => !x.HasParameters).Resolve());
+
+			foreach (ClassWeavingContext classWeavingContext in this.GetWeavingCandidates(references, defaultTypeDefinition, new Namespaces(this)))
 			{
 				ICollection<NavigationPropertyWeavingContext> navigationPropertyWeavingContexts = classWeavingContext.GetNavigationPropertyCandidates();
 
@@ -77,8 +86,8 @@ namespace SpatialFocus.EFLazyLoading.Fody
 
 			loadInstructionEnd.Append(x => x.Create(OpCodes.Ldarg_0)).Append(x => x.Create(OpCodes.Ret));
 
-			loadInstructionStart.Append(x => x.Create(OpCodes.Brtrue_S, loadInstructionStart.CurrentInstruction!.Next))
-				.Append(x => x.Create(OpCodes.Br_S, loadInstructionEnd.CurrentInstruction!.Next));
+			loadInstructionStart.Append(x => x.Create(OpCodes.Brtrue_S, loadInstructionStart.Instruction!.Next))
+				.Append(x => x.Create(OpCodes.Br_S, loadInstructionEnd.Instruction!.Next));
 
 			extension.Methods.Add(loadMethodDefinition);
 

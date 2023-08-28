@@ -60,12 +60,34 @@ namespace SpatialFocus.EFLazyLoading.Fody
 
 		public static void AddLazyLoadingToGetter(this NavigationPropertyWeavingContext context)
 		{
-			context.PropertyDefinition.GetMethod.Body.GetILProcessor().Start()
-				.Prepend(x => x.Create(OpCodes.Callvirt, context.ClassWeavingContext.References.LazyLoaderInvokeMethod))
-				.Prepend(x => x.Create(OpCodes.Ldstr, context.PropertyDefinition.Name))
-				.Prepend(x => x.Create(OpCodes.Ldarg_0))
-				.Prepend(x => x.Create(OpCodes.Ldfld, context.ClassWeavingContext.LazyLoaderField))
-				.Prepend(x => x.Create(OpCodes.Ldarg_0));
+			var processorCtx = context.PropertyDefinition.GetMethod.Body.GetILProcessor().Start();
+
+			processorCtx
+				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ret))
+				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldfld, context.FieldDefinition))
+				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldarg_0))
+				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Stfld, context.FieldDefinition))
+				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Newobj, context.ClassWeavingContext.References.DefaultCollectionCtor))
+				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldarg_0))
+				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Br_S, processorCtx.Instruction))
+				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Callvirt, context.ClassWeavingContext.References.LazyLoaderInvokeMethod))
+				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldstr, context.PropertyDefinition.Name))
+				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldarg_0))
+				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldfld, context.ClassWeavingContext.LazyLoaderField))
+				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldarg_0))
+				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Brfalse_S, processorCtx.Instruction))
+				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldfld, context.ClassWeavingContext.LazyLoaderField))
+				.Prepend(ilProcessor => ilProcessor.Create(OpCodes.Ldarg_0));
+
+			// Insert the new instructions into the method body
+			//context.PropertyDefinition.GetMethod.Body.Instructions.Insert(0, returnFieldInstruction);
+
+			// context.PropertyDefinition.GetMethod.Body.GetILProcessor().Start()
+			// .Prepend(x => x.Create(OpCodes.Callvirt, context.ClassWeavingContext.References.LazyLoaderInvokeMethod))
+			// .Prepend(x => x.Create(OpCodes.Ldstr, context.PropertyDefinition.Name))
+			// .Prepend(x => x.Create(OpCodes.Ldarg_0))
+			// .Prepend(x => x.Create(OpCodes.Ldfld, context.ClassWeavingContext.LazyLoaderField))
+			// .Prepend(x => x.Create(OpCodes.Ldarg_0));
 		}
 	}
 }
